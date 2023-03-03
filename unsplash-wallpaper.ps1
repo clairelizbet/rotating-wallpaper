@@ -19,28 +19,11 @@ else {
 $ProgressPreference = 'SilentlyContinue'
 
 # Stop going if we run into an error
-# $ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
-# Set base URI to Unsplash search API
-$BaseUri = "https://unsplash.com/napi/search/photos?query=$SearchFor&page={0}&per_page={1}&orientation=$Orientation"
-
-# Check how many images there are to choose from
-$MetaQuery = [uri]::EscapeUriString(($BaseUri -f 1, 1))
-$TotalImages = ((Invoke-WebRequest -UseBasicParsing -URI $MetaQuery).Content | ConvertFrom-Json).total
-$ImagesPerPage = [Math]::Min($TotalImages, 20)
-$AvailablePages = [Math]::Floor($TotalImages / $ImagesPerPage)
-
-# Select a random page between 1 and the lesser of 10 or the number of pages available
-$MaxPage = [Math]::Min($AvailablePages, 10)
-$Page = [Math]::Floor((Get-Random -Minimum 1 -Maximum $MaxPage))
-
-# Fetch images
-$ImageQuery = [uri]::EscapeUriString(($BaseUri -f $Page, $ImagesPerPage))
-$Images = ((Invoke-WebRequest -UseBasicParsing -URI $ImageQuery).Content | ConvertFrom-Json).results | Where-Object { $_.premium -eq $false }
-
-# Select a random images from the results
-$ImageIndex = [Math]::Floor((Get-Random -Minimum 0 -Maximum ($Images.count - 1)))
-$ImageUri = $Images[$ImageIndex].urls.raw
+# Get a random image from Unsplash
+$ImageQuery = [uri]::EscapeUriString("https://unsplash.com/napi/photos/random?query=$SearchFor&orientation=$Orientation")
+$ImageUri = ((Invoke-WebRequest -UseBasicParsing -URI $ImageQuery).Content | ConvertFrom-Json).urls.raw
 
 # Write the image to a temp file
 $TempPath = [System.IO.Path]::GetTempFileName()
