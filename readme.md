@@ -6,7 +6,7 @@ Pulls images matching your search from [Unsplash](https://unsplash.com)
 
 ## Getting Started
 
-Grab the latest installer [here](https://github.com/clairelizbet/discord-sudo/releases/tag/latest)!
+Grab the latest installer [here](https://github.com/clairelizbet/rotating-wallpaper/releases/latest)!
 
 ![Screenshot displaying a UI with search query textbox, an image directory textbox, and a rotate every X hours slider](https://raw.githubusercontent.com/clairelizbet/rotating-wallpaper/main/preview.png)
 
