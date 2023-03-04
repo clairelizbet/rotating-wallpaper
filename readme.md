@@ -8,6 +8,8 @@ Pulls images matching your search from [Unsplash](https://unsplash.com)
 
 Grab the latest installer [here](https://github.com/clairelizbet/discord-sudo/releases/tag/latest)!
 
+![Screenshot displaying a UI with search query textbox, an image directory textbox, and a rotate every X hours slider](https://raw.githubusercontent.com/clairelizbet/rotating-wallpaper/main/preview.png)
+
 Images, along with attribution info, will be placed in the `Save to` directory chosen on install.
 
 ## Uninstalling
