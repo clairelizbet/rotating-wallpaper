@@ -63,6 +63,14 @@ if ($args[0]) {
   }
 
   $ImageUri = $ImageResponse.links.download
+  $ImageDescription = $ImageResponse.alt_description
+  $ImageLink = $ImageResponse.links.html
+  $ImageAuthor = $ImageResponse.user.name
+
+  $ImageUri = if ($ImageUri) { $ImageUri } else { "" }
+  $ImageDescription = if ($ImageDescription) { $ImageDescription } else { "" }
+  $ImageLink = if ($ImageLink) { $ImageLink } else { "" }
+  $ImageAuthor = if ($ImageAuthor) { $ImageAuthor } else { "" }
 
   # Write the image to a temp file
   $TempPath = [System.IO.Path]::GetTempFileName()
@@ -81,9 +89,6 @@ if ($args[0]) {
   # Write to the image log
   $LogFile = "$WallpaperFolder\rotation-history.txt"
   $Date = Get-Date
-  $ImageDescription = $ImageResponse.alt_description
-  $ImageLink = $ImageResponse.links.html
-  $ImageAuthor = $ImageResponse.user.name
 
   $(
     "$Date :: $ImageName :: $ImageDescription :: $ImageAuthor :: $ImageLink"
