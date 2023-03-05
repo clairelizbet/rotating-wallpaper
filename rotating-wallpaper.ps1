@@ -1,4 +1,4 @@
-Add-Type -Assembly System.Drawing
+﻿Add-Type -Assembly System.Drawing
 Add-Type -AssemblyName PresentationFramework
 
 $PhotosFolder = [Environment]::GetFolderPath("MyPictures")
@@ -21,7 +21,7 @@ if ($args[0]) {
   try {
     [int]$IntervalHours = [Math]::clamp([convert]::ToInt32($args[2], 10), 1, 24)
   } catch {
-    $IntervalHours = 1 
+    $IntervalHours = 1
   }
 
   if ($args[3] -eq "portrait") {
@@ -47,7 +47,7 @@ if ($args[0]) {
 
   for ($retry = 1; $retry -le $MaxRetries; $retry++) {
     try {
-  $ImageResponse = (Invoke-WebRequest -UseBasicParsing -URI $ImageQuery).Content | ConvertFrom-Json
+      $ImageResponse = (Invoke-WebRequest -UseBasicParsing -URI $ImageQuery).Content | ConvertFrom-Json
       break
     } catch {
       [float]$BackoffFudge = (Get-Random -Max 1000) / 1000
@@ -83,6 +83,36 @@ if ($args[0]) {
   $TempPathJPG = [IO.Path]::ChangeExtension($TempPath, '.jpg');
   $ImageName = Split-Path -Leaf -Path $TempPathJPG
   $ImagePath = "$WallpaperFolder\$ImageName"
+
+  # This approach is super weird but MS have disabled the constructor for PropertyItem
+  # and their official documentation says to do it this way, so whatever I guess...
+  $ReusablePropertyItem = $Image.PropertyItems | Select-Object -First 1
+
+  if ($ReusablePropertyItem) {
+    # Set meta info on image
+
+    $ASCII = [System.Text.ASCIIEncoding]::new()
+    $UTF16 = [System.Text.UnicodeEncoding]::new()
+
+    $ReusablePropertyItem.id = 270 # Description/Title
+    $ReusablePropertyItem.Type = 2 # String
+    $ReusablePropertyItem.Value = $ASCII.GetBytes("$ImageDescription`0")
+    $ReusablePropertyItem.len = $ReusablePropertyItem.Value.Length
+    $Image.SetPropertyItem($ReusablePropertyItem)
+
+    $ReusablePropertyItem.id = 315 # Author name
+    $ReusablePropertyItem.Type = 2 # String
+    $ReusablePropertyItem.Value = $ASCII.GetBytes("$ImageAuthor`0")
+    $ReusablePropertyItem.len = $ReusablePropertyItem.Value.Length
+    $Image.SetPropertyItem($ReusablePropertyItem)
+
+    $ReusablePropertyItem.id = 40092 # Comment
+    $ReusablePropertyItem.Type = 1 # Byte array
+    $ReusablePropertyItem.Value = $UTF16.GetBytes("$ImageLink`0")
+    $ReusablePropertyItem.len = $ReusablePropertyItem.Value.Length
+    $Image.SetPropertyItem($ReusablePropertyItem)
+  }
+
   $Image.Save($ImagePath, [System.Drawing.Imaging.ImageFormat]::Jpeg);
   $Image.Dispose();
 
