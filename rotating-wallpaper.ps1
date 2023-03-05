@@ -18,10 +18,9 @@ if ($args[0]) {
     $WallpaperFolder = $DefaultWallpaperFolder
   }
 
-  if ($args[2]) {
-    $IntervalHours = $args[2]
-  }
-  else {
+  try {
+    [int]$IntervalHours = [Math]::clamp([convert]::ToInt32($args[2], 10), 1, 24)
+  } catch {
     $IntervalHours = 1 
   }
 
