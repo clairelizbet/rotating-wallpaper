@@ -1,4 +1,4 @@
-﻿Add-Type -Assembly System.Drawing
+Add-Type -Assembly System.Drawing
 Add-Type -AssemblyName PresentationFramework
 
 $PhotosFolder = [Environment]::GetFolderPath("MyPictures")
@@ -18,8 +18,15 @@ if ($args[0]) {
     $WallpaperFolder = $DefaultWallpaperFolder
   }
 
-  if ($args[2] -eq "portrait") {
-    $Orientation = $args[2]
+  if ($args[2]) {
+    $IntervalHours = $args[2]
+  }
+  else {
+    $IntervalHours = 1 
+  }
+
+  if ($args[3] -eq "portrait") {
+    $Orientation = $args[3]
   }
   else {
     $Orientation = "landscape" 
@@ -34,7 +41,28 @@ if ($args[0]) {
   # Get a random image from Unsplash
   $BaseUri = "https://unsplash.com/napi"
   $ImageQuery = [uri]::EscapeUriString("$BaseUri/photos/random?query=$SearchFor&orientation=$Orientation")
+
+  $MaxRetries = 5
+  # Retry n times, spread out over half the interval duration
+  $RetryBase = [Math]::Pow($IntervalHours * 60 * .5, (1 / $MaxRetries))
+
+  for ($retry = 1; $retry -le $MaxRetries; $retry++) {
+    try {
   $ImageResponse = (Invoke-WebRequest -UseBasicParsing -URI $ImageQuery).Content | ConvertFrom-Json
+      break
+    } catch {
+      [float]$BackoffFudge = (Get-Random -Max 1000) / 1000
+      [float]$BackoffMinutes = [Math]::Pow($RetryBase, $retry) + $BackoffFudge
+      $BackoffDuration = $BackoffMinutes * 60
+
+      if ($retry -ge $MaxRetries) {
+        exit
+      } else {
+        Start-Sleep -Seconds $BackoffDuration
+      }
+    }
+  }
+
   $ImageUri = $ImageResponse.links.download
 
   # Write the image to a temp file
@@ -148,7 +176,7 @@ else {
       $InstancePath = $MyInvocation.MyCommand.Definition
       $InstanceFileName = Split-Path -Leaf -Path $InstancePath
 
-      $TaskArgs = "-ExecutionPolicy Bypass -WindowStyle Hidden -NoProfile -NonInteractive -File $InstanceFileName ""$SearchFor"" ""$WallpaperFolder"""
+      $TaskArgs = "-ExecutionPolicy Bypass -WindowStyle Hidden -NoProfile -NonInteractive -File $InstanceFileName ""$SearchFor"" ""$WallpaperFolder"" $IntervalHours"
       $Action = New-ScheduledTaskAction -Execute "powershell.exe" `
         -Argument $TaskArgs `
         -WorkingDirectory $AppDir
@@ -157,7 +185,7 @@ else {
       $InstanceFileName = Split-Path -Leaf -Path $InstancePath
 
       $Action = New-ScheduledTaskAction -Execute $InstanceFileName `
-        -Argument """$SearchFor"" ""$WallpaperFolder""" `
+        -Argument """$SearchFor"" ""$WallpaperFolder"" $IntervalHours" `
         -WorkingDirectory $AppDir
     }
 
